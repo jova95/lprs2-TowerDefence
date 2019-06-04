@@ -1,1 +1,1 @@
- -p spartan6 -lang vhdl$(PROJECT_SEARCHPATHOPT) $(GLOBAL_SEARCHPATHOPT) -msg __xps/ise/xmsgprops.lst -s mgm -X D:/towerdefence/lprs2-TowerDefence/
+ -p spartan6 -lang vhdl$(PROJECT_SEARCHPATHOPT) $(GLOBAL_SEARCHPATHOPT) -msg __xps/ise/xmsgprops.lst -s isim -X D:/RA150-2016/lprs2-TowerDefence/
