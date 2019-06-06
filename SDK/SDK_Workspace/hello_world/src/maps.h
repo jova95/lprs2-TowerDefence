@@ -9,9 +9,16 @@
 #define MAPS_H_
 #define SIZEROW 15
 #define SIZECOLUMN 20
+struct Level {
+    unsigned char initial_map[SIZEROW][SIZECOLUMN];
+    int start_row;
+    int start_column;
+};
 
 // Map 1
-unsigned char map1Origin[SIZEROW][SIZECOLUMN] = {
+struct Level level1 = {
+	.initial_map =
+	{
 	{'G','G','D','G','G','G','G','G','G','G','G','G','B','B','G','G','G','G','G','O'},
 	{'G','G','D','G','G','G','G','G','G','G','G','G','B','B','1','2','3','G','G','t'},
 	{'G','G','D','G','G','G','D','D','D','G','G','G','G','G','4','5','6','G','G','G'},
@@ -27,26 +34,34 @@ unsigned char map1Origin[SIZEROW][SIZECOLUMN] = {
 	{'G','B','B','G','G','G','G','G','G','G','G','G','G','G','G','G','G','B','B','B'},
 	{'G','G','B','B','B','G','G','G','G','G','G','G','G','G','B','G','B','B','G','B'},
 	{'B','B','G','B','G','G','G','B','B','B','G','B','G','G','G','B','G','B','B','G'},
-};
+},
 
-// Map 2
-unsigned char map2Origin[SIZEROW][SIZECOLUMN]= {
-	 {'G','B','B','B','B','B','B','G','B','G','G','G','G','B','B','G','G','G','G','O'},
-	 {'G','G','G','B','B','B','B','B','G','B','G','G','B','B','G','G','G','B','G','t'},
-	 {'B','G','G','B','B','B','G','G','G','G','B','B','B','G','G','B','B','G','S','7'},
-	 {'B','B','B','B','G','B','G','G','B','B','B','B','B','D','D','D','D','D','D','D'},
-	 {'G','G','B','G','G','B','G','G','B','B','B','B','B','D','S','B','G','B','B','7'},
-	 {'G','B','B','B','B','G','B','B','S','B','B','B','S','D','G','G','G','B','B','B'},
-	 {'B','B','B','B','D','D','D','D','D','D','D','D','D','D','B','B','B','B','B','B'},
-	 {'B','G','G','G','D','S','G','G','G','G','G','B','B','G','B','B','G','G','B','B'},
-	 {'B','B','B','B','D','B','G','B','B','B','B','B','B','G','G','G','B','B','B','B'},
-	 {'B','B','B','B','D','D','D','B','G','G','B','B','B','B','B','B','B','B','G','B'},
-	 {'B','B','X','B','B','S','D','B','G','B','B','B','B','B','B','B','G','B','B','B'},
-	 {'D','D','D','D','D','D','D','B','B','B','B','G','B','B','B','G','G','B','B','B'},
-	 {'G','G','B','B','S','B','G','B','B','B','G','B','B','B','B','B','G','G','G','G'},
-	 {'G','G','G','B','B','B','B','B','G','B','B','G','B','B','G','B','G','1','2','3'},
-	 {'G','G','G','B','B','B','B','B','B','B','B','B','B','G','B','B','B','4','5','6'},
-};
+.start_row = 0,
+.start_column = 2};
+
+struct Level level2 = {
+	.initial_map =
+	{
+	{'G','B','B','B','B','B','B','G','B','G','G','G','G','B','B','G','G','G','G','O'},
+	{'G','G','G','B','B','B','B','B','G','B','G','G','B','B','G','G','G','B','G','t'},
+	{'B','G','G','B','B','B','G','G','G','G','B','B','B','G','G','B','B','G','S','7'},
+	{'B','B','B','B','G','B','G','G','B','B','B','B','B','D','D','D','D','D','D','D'},
+	{'G','G','B','G','G','B','G','G','B','B','B','B','B','D','S','B','G','B','B','7'},
+	{'G','B','B','B','B','G','B','B','S','B','B','B','S','D','G','G','G','B','B','B'},
+	{'B','B','B','B','D','D','D','D','D','D','D','D','D','D','B','B','B','B','B','B'},
+	{'B','G','G','G','D','S','G','G','G','G','G','B','B','G','B','B','G','G','B','B'},
+	{'B','B','B','B','D','B','G','B','B','B','B','B','B','G','G','G','B','B','B','B'},
+	{'B','B','B','B','D','D','D','B','G','G','B','B','B','B','B','B','B','B','G','B'},
+	{'B','B','X','B','B','S','D','B','G','B','B','B','B','B','B','B','G','B','B','B'},
+	{'D','D','D','D','D','D','D','B','B','B','B','G','B','B','B','G','G','B','B','B'},
+	{'G','G','B','B','S','B','G','B','B','B','G','B','B','B','B','B','G','G','G','G'},
+	{'G','G','G','B','B','B','B','B','G','B','B','G','B','B','G','B','G','1','2','3'},
+	{'G','G','G','B','B','B','B','B','B','B','B','B','B','G','B','B','B','4','5','6'},
+},
+
+.start_row = 0,
+.start_column = 2};
+
 
 // game Over
 unsigned char gameOver[SIZEROW][SIZECOLUMN] = {

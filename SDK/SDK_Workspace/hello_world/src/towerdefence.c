@@ -74,6 +74,20 @@
 #define SELECTEDTOWER 'O'
 #define SELECTEDTOWER2 'o'
 
+#define SELECTEDTOWER 'O'
+#define SELECTEDTOWER2 'o'
+#define MAXCREEPS 20
+#define MAX_ROUTE_LENGTH 100
+
+#define MAP_HEIGHT 15
+#define MAP_WIDTH 20
+
+#define NISTA 0
+#define GORE 1
+#define DOLE 2
+#define LEVO 3
+#define DESNO 4
+
 #define UP 0b01000000
 #define DOWN 0b00000100
 #define LEFT 0b00100000
@@ -85,29 +99,32 @@
 
 bool endGame = false;
 
-//////////////BUGS////////////////////
-// level 2 tower cnt bug,
-// something is wrong with array initialization or define(working after first pass)
-//////////////////////////////////////
-
-int rowDirtFields[60]={[0 ... 59] = -1};
-int columnDirtFields[60]={[0 ... 59] = -1};
-int dirtLen=0;
-
-int rowTowerFields[10]={[0 ... 9] = -1};
-int columnTowerFields[10]={[0 ... 9] = -1};
-int numOfTowers = 0;
-
-
+unsigned char map[SIZEROW][SIZECOLUMN] = {{[0 ... SIZEROW-1] = GRASS}, {[0 ... SIZECOLUMN-1] = GRASS}};
 
 char lastKey = 'n';
+int currentI = 0;
 
-typedef struct dirt_position{
+// structures
+struct GameState {
+    int coins;
+    int current_level;
+};
 
-	unsigned char start_position[SIZEROW][SIZECOLUMN];
-	unsigned char map[SIZEROW][SIZECOLUMN];
+struct CreepRoute {
+    unsigned char creep_x[MAX_ROUTE_LENGTH];
+    unsigned char creep_y[MAX_ROUTE_LENGTH];
+    int length;
+};
 
-}Drit_position;
+struct TowerPosition {
+    unsigned char tower_x[10];
+    unsigned char tower_y[10];
+    int numOfTowers;
+};
+
+int btnCnt = 0;
+int creepsSpawned = 0;
+
 
 void init(){
 
@@ -157,134 +174,86 @@ void drawSprite(int in_x, int in_y, int out_x, int out_y, int width, int height)
 	}
 }
 
-void drawMap(){
-	int row, column;
-	for (row = 0; row < SIZEROW; row++) {
-		for (column = 0; column < SIZECOLUMN; column++) {
-			if(mapChanges[row][column]){
-				mapChanges[row][column] = false;
-				if (map[row][column] == GRASS){
-					drawSprite(16, 0, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == DIRT || map[row][column] == DIRTPREVIOUS) {
-					drawSprite(0, 0, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == BUSH){
-					drawSprite(32, 0, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == CREEP){
-					drawSprite(48, 0, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == CREEP1){
-					drawSprite(48, 16, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == CREEP2){
-					drawSprite(48, 32, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == CREEP3){
-					drawSprite(48, 48, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == CREEP4){
-					drawSprite(48, 64, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == LAKE1){
-					drawSprite(0, 16, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == LAKE2){
-					drawSprite(16, 16, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == LAKE3){
-					drawSprite(32, 16, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == LAKE4){
-					drawSprite(0, 32, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == LAKE5){
-					drawSprite(16, 32, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == LAKE6){
-					drawSprite(32, 32, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == SPOT){
-					drawSprite(64, 0, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == SELECTEDSPOT){
-					drawSprite(64, 16, column * 16, row * 16, 16, 16);
-				}
-				else if (map[row][column] == TOWER){
-					drawSprite(64,32,column*16,row*16,16,16);
-				}
-				else if (map[row][column] == TOWER2){
-					drawSprite(80,32,column*16,row*16,16,16);
-				}
-				else if(map[row][column] == SELECTEDTOWER){
-					drawSprite(64,48,column*16,row*16,16,16);
-				}
-				else if(map[row][column] == SELECTEDTOWER2){
-					drawSprite(80,48,column*16,row*16,16,16);
-				}
-				else if(map[row][column] == HP1){
-					drawSprite(112,0,column*16,row*16,16,16);
-				}
-				else if(map[row][column] == HP2){
-					drawSprite(112,16,column*16,row*16,16,16);
-				}
-				else if(map[row][column] == HP3){
-					drawSprite(112,32,column*16,row*16,16,16);
-				}
-				else if(map[row][column] == HP4){
-					drawSprite(112,48,column*16,row*16,16,16);
-				}
-
-
-			}
-		}
-	}
-}
-
-//draw amount of coins
-void printNum(int row,int column,int num){
-
-	if(num==0){
-		drawSprite(16,48,column,row,8,8);
-	}
-	else if(num==1){
-		drawSprite(24,48,column,row,8,8);
-	}
-
-	else if(num==2){
-		drawSprite(32,48,column,row,8,8);
-	}
-	else if(num==3){
-		drawSprite(40,48,column,row,8,8);
-	}
-	else if(num==4){
-		drawSprite(16,56,column,row,8,8);
-	}
-	else if(num==5){
-		drawSprite(24,56,column,row,8,8);
-	}
-	else if(num==6){
-		drawSprite(32,56,column,row,8,8);
-	}
-	else if(num==7){
-		drawSprite(40,56,column,row,8,8);
-	}
-	else if(num==8){
-		drawSprite(16,64,column,row,8,8);
-	}
-	if(num==9){
-		drawSprite(24,64,column,row,8,8);
-	}
-
+int getSpriteIndex(int tile_type)
+{
+    switch (tile_type) {
+		case GRASS: return 0;
+		case DIRT: return 1;
+		case DIRTPREVIOUS: return 2;
+		case BUSH: return 3;
+		case LAKE1: return 4;
+		case LAKE2: return 5;
+		case LAKE3: return 6;
+		case LAKE4: return 7;
+		case LAKE5: return 8;
+		case LAKE6: return 9;
+		case CREEP: return 10;
+		case CREEP1: return 11;
+		case CREEP2: return 12;
+		case CREEP3: return 13;
+		case CREEP4: return 14;
+		case HP1: return 15;
+		case HP2: return 16;
+		case HP3: return 17;
+		case HP4: return 18;
+		case SPOT: return 19;
+		case SELECTEDSPOT: return 20;
+		case TOWER: return 21;
+		case TOWER2: return 22;
+		case SELECTEDTOWER: return 23;
+		case SELECTEDTOWER2: return 24;
+    }
 
 }
+void drawMap()
+{
+    const int sprite_x[] = {16, 0, 0, 32, 0, 16, 32, 0, 16, 32, 48, 48, 48, 48, 48, 112, 112, 112, 112, 64, 64, 64, 80, 64, 80};
+    const int sprite_y[] = {0, 0, 0, 0, 16, 16, 16, 32, 32, 32, 0, 48, 0, 16, 32, 0, 64, 0, 16, 0, 16, 48, 48, 64, 80};
 
-//max coins 99, calls printNum for drawing left or right coin
-void printCoins(){
+    int row, column;
+    for (row = 0; row < SIZEROW; row++)
+    {
+        for (column = 0; column < SIZECOLUMN; column++)
+        {
+            if (mapChanges[row][column])
+            {
+                mapChanges[row][column] = false;
+                int index = getSpriteIndex(map[row][column]);
+                drawSprite(sprite_x[index], sprite_y[index], column * 16, row * 16, 16, 16);
+            }
+        }
+    }
+ }
+
+
+void printDigit(int digit, int x, int y)
+{
+    static const int sprite_y[10] = {48, 48, 48, 48, 56, 56, 56, 56, 64, 64};
+    static const int sprite_x[10] = {16, 24, 32, 48, 16, 24, 32, 48, 16, 24};
+
+    drawSprite(sprite_x[digit], sprite_y[digit], y, x, 8, 8);
+}
+
+void printNumber(int number, int x, int y)
+{
+    int left_digit = number / 10;
+    int right_digit = number % 10;
+
+    printDigit(right_digit, x, y + 8);
+    if (left_digit == 0) {
+        drawSprite(16, 0, y, x, 8, 8);
+    }
+    else {
+        printDigit(left_digit, x, y);
+    }
+}
+
+
+/*max state->coins 99, calls printNum for drawing left or right coin
+void printstate->coins(){
 	int l,r;
-	l=coins/10;
-	r=coins%10;
+	l=state->coins/10;
+	r=state->coins%10;
 	printNum(0,8,r);
 	if(l!=0){
 		printNum(0,0,l);
@@ -309,120 +278,131 @@ void printCreepNumb(){
 		drawSprite(16,0,0,8,8,8);
 	}
 
+}*/
+void fillRoute(struct CreepRoute *route, int start_row, int start_column) {
+    int column = start_column;
+    int row = start_row;
+    int i = 0;
+
+    route->length = 0;
+
+    int prethodni_smer = NISTA;
+    while (column != MAP_WIDTH - 1) {
+        route->creep_x[i] = row;
+        route->creep_y[i] = column;
+
+        if (column < (MAP_WIDTH - 1) && map[row][column + 1] == DIRT) { // DESNO
+            if (i == 0 || prethodni_smer != LEVO) {
+                prethodni_smer = DESNO;
+                column++;
+                i++;
+                continue;
+            }
+        }
+        if (column > 0 && map[row][column - 1] == DIRT) { // LEVO
+            if (i == 0 || prethodni_smer != DESNO) {
+                prethodni_smer = LEVO;
+                column--;
+                i++;
+                continue;
+            }
+        }
+        if (row < MAP_HEIGHT - 1 && map[row + 1][column] == DIRT) { // DOLE
+            if (i == 0 || prethodni_smer != GORE) {
+                prethodni_smer = DOLE;
+                row++;
+                i++;
+                continue;
+            }
+        }
+        if (row > 0 && map[row - 1][column] == DIRT) { // GORE
+            if (i == 0 || prethodni_smer != DOLE) {
+                prethodni_smer = GORE;
+                row--;
+                i++;
+                continue;
+            }
+        }
+    }
+
+    route->length = i + 1;
 }
 
+
 //moving creep forward
-void moveCreep(){
-	int i = dirtLen;
-	if(map[rowDirtFields[i]][columnDirtFields[i]] != DIRT){
-		if(map[rowDirtFields[i]][columnDirtFields[i]]==CREEP4){
-			creepsRem--;
-			map[rowDirtFields[i]][columnDirtFields[i]] = DIRT;
-			mapChanges[rowDirtFields[i]][columnDirtFields[i]] = true;
+void moveCreep(struct CreepRoute *route, struct GameState *state, int *currentHP, int *creepsRem){
+	int r = 42; /// r=110 a route->length = 42
+	if(map[route->creep_x[r]][route->creep_y[r]] != DIRT){
+		if(map[route->creep_x[r]][route->creep_y[r]]==CREEP4){
+			(*creepsRem)--;
+			map[route->creep_x[r]][route->creep_y[r]] = DIRT;
+			mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
 		}
 		else{
-			currentHP--;
-			creepsRem--;
+			(*currentHP)--;
+			(*creepsRem)--;
 
-			if(currentHP == 2){
-				map[rowDirtFields[dirtLen]-1][columnDirtFields[dirtLen]] = HP2;
-				map[rowDirtFields[dirtLen]+1][columnDirtFields[dirtLen]] = HP2;
-				mapChanges[rowDirtFields[dirtLen]-1][columnDirtFields[dirtLen]] = true;
-				mapChanges[rowDirtFields[dirtLen]+1][columnDirtFields[dirtLen]] = true;
+			if((*currentHP) == 2){
+				map[route->creep_x[route->length]-1][route->creep_y[route->length]] = HP2;
+				map[route->creep_x[route->length]+1][route->creep_y[route->length]] = HP2;
+				mapChanges[route->creep_x[route->length]-1][route->creep_y[route->length]] = true;
+				mapChanges[route->creep_x[route->length]+1][route->creep_y[route->length]] = true;
 			}
-			else if(currentHP == 1){
-				map[rowDirtFields[dirtLen]-1][columnDirtFields[dirtLen]] = HP3;
-				map[rowDirtFields[dirtLen]+1][columnDirtFields[dirtLen]] = HP3;
-				mapChanges[rowDirtFields[dirtLen]-1][columnDirtFields[dirtLen]] = true;
-				mapChanges[rowDirtFields[dirtLen]+1][columnDirtFields[dirtLen]] = true;
+			else if((*currentHP) == 1){
+				map[route->creep_x[route->length]-1][route->creep_y[route->length]] = HP3;
+				map[route->creep_x[route->length]+1][route->creep_y[route->length]] = HP3;
+				mapChanges[route->creep_x[route->length]-1][route->creep_y[route->length]] = true;
+				mapChanges[route->creep_x[route->length]+1][route->creep_y[route->length]] = true;
 			}
-			else if(currentHP == 0){
-				map[rowDirtFields[dirtLen]-1][columnDirtFields[dirtLen]] = HP4;
-				map[rowDirtFields[dirtLen]+1][columnDirtFields[dirtLen]] = HP4;
-				mapChanges[rowDirtFields[dirtLen]-1][columnDirtFields[dirtLen]] = true;
-				mapChanges[rowDirtFields[dirtLen]+1][columnDirtFields[dirtLen]] = true;
+			else if((*currentHP) == 0){
+				map[route->creep_x[route->length]-1][route->creep_y[route->length]] = HP4;
+				map[route->creep_x[route->length]+1][route->creep_y[route->length]] = HP4;
+				mapChanges[route->creep_x[route->length]-1][route->creep_y[route->length]] = true;
+				mapChanges[route->creep_x[route->length]+1][route->creep_y[route->length]] = true;
 				endGame = true;
 			}
-			map[rowDirtFields[i]][columnDirtFields[i]] = DIRT;
-			mapChanges[rowDirtFields[i]][columnDirtFields[i]] = true;
+			map[route->creep_x[r]][route->creep_y[r]] = DIRT;
+			mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
 		}
 	}
-	while((i--) >= 0){
-		if(map[rowDirtFields[i]][columnDirtFields[i]] != DIRT){
-			if(map[rowDirtFields[i]][columnDirtFields[i]]==CREEP4){
-				creepsRem--;
-				coins+=3;
-				printCoins();
-				map[rowDirtFields[i]][columnDirtFields[i]] = DIRT;
-				mapChanges[rowDirtFields[i]][columnDirtFields[i]] = true;
+	while((r--) >= 0){
+		if(map[route->creep_x[r]][route->creep_y[r]] != DIRT){
+			if(map[route->creep_x[r]][route->creep_y[r]]==CREEP4){
+				(*creepsRem)--;
+				state->coins+=3;
+				printNumber(state->coins, 0, 0);
+				map[route->creep_x[r]][route->creep_y[r]] = DIRT;
+				mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
 			}
 			else{
-				map[rowDirtFields[i+1]][columnDirtFields[i+1]] = map[rowDirtFields[i]][columnDirtFields[i]];
-				map[rowDirtFields[i]][columnDirtFields[i]] = DIRT;
-				mapChanges[rowDirtFields[i+1]][columnDirtFields[i+1]] = true;
-				mapChanges[rowDirtFields[i]][columnDirtFields[i]] = true;
+				map[route->creep_x[r+1]][route->creep_y[r+1]] = map[route->creep_x[r]][route->creep_y[r]];
+				map[route->creep_x[r]][route->creep_y[r]] = DIRT;
+				mapChanges[route->creep_x[r+1]][route->creep_y[r+1]] = true;
+				mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
 			}
 		}
+		drawMap();
 	}
 
 	drawMap();
 }
 
-void getDirtPos(){
-
-
-
-	while(rowDirtFields[dirtLen] != 0 && rowDirtFields[dirtLen] != 14 && columnDirtFields[dirtLen] != 19)
-	{
-		prevRow = rowDirtFields[dirtLen-1];
-		prevColumn = columnDirtFields[dirtLen-1];
-		dirtLen++;
-		if(map[rowDirtFields[dirtLen-1]+1][columnDirtFields[dirtLen-1]] == DIRT){
-			if((prevRow!=rowDirtFields[dirtLen-1]+1)||(prevColumn!=columnDirtFields[dirtLen-1])){
-				rowDirtFields[dirtLen] = rowDirtFields[dirtLen-1]+1;
-				columnDirtFields[dirtLen] = columnDirtFields[dirtLen-1];
-			}
-
-		}
-		if(map[rowDirtFields[dirtLen-1]-1][columnDirtFields[dirtLen-1]] == DIRT){
-			if((prevRow!=rowDirtFields[dirtLen-1]-1)||(prevColumn!=columnDirtFields[dirtLen-1])){
-				rowDirtFields[dirtLen] = rowDirtFields[dirtLen-1]-1;
-				columnDirtFields[dirtLen] = columnDirtFields[dirtLen-1];
-
-			}
-		}
-		if(map[rowDirtFields[dirtLen-1]][columnDirtFields[dirtLen-1]+1] == DIRT){
-			if((prevRow!=rowDirtFields[dirtLen-1])||(prevColumn!=columnDirtFields[dirtLen-1]+1)){
-				rowDirtFields[dirtLen] = rowDirtFields[dirtLen-1];
-				columnDirtFields[dirtLen] = columnDirtFields[dirtLen-1]+1;
-
-			}
-		}
-		if(map[rowDirtFields[dirtLen-1]][columnDirtFields[dirtLen-1]-1] == DIRT){
-			if((prevRow!=rowDirtFields[dirtLen-1])||(prevColumn!=columnDirtFields[dirtLen-1]-1)){
-				rowDirtFields[dirtLen] = rowDirtFields[dirtLen-1];
-				columnDirtFields[dirtLen] = columnDirtFields[dirtLen-1]-1;
-			}
-		}
-	}
-}
-
-void getTowerPos(){
+void getTowerPos(struct CreepRoute *route, struct TowerPosition *position ){
 
 	int i,j,k,h;
-	for(i=1;i<dirtLen-1;i++){
+	for(i=1;i<route->length;i++){
 		for(j=-1;j<2;j++){
 			for(k=-1;k<2;k++){
-				if(map[rowDirtFields[i]+j][columnDirtFields[i]+k] == SPOT || map[rowDirtFields[i]+j][columnDirtFields[i]+k] == SELECTEDSPOT){
+				if(map[route->creep_x[i]+j][route->creep_y[i]+k] == SPOT || map[route->creep_x[i]+j][route->creep_y[i]+k] == SELECTEDSPOT){
 					bool exists = false;
 					for(h=0;h<i;h++){
-						if((rowTowerFields[h] == rowDirtFields[i]+j) && (columnTowerFields[h] == columnDirtFields[i]+k)){
+						if((position->tower_x[h] == route->creep_x[i]+j) && (position->tower_y[h] == route->creep_y[i]+k)){
 							exists = true;
 						}
 					}
 					if(!exists){
-						rowTowerFields[numOfTowers] = rowDirtFields[i]+j;
-						columnTowerFields[numOfTowers++] = columnDirtFields[i]+k;
+						position->tower_x[position->numOfTowers] = route->creep_x[i]+j;
+						position->tower_y[position->numOfTowers++] = route->creep_y[i]+k;
 					}
 
 				}
@@ -457,79 +437,79 @@ char getPressedKey() {
 	}
 }
 
-void placeTower(){
+void placeTower(struct GameState *state, struct TowerPosition *position){
 
 	char pressedKey = getPressedKey();
 
 	switch(pressedKey){
 		case 'r':
-			if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == SELECTEDSPOT){
-				map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SPOT;
+			if(map[position->tower_x[currentI]][position->tower_y[currentI]] == SELECTEDSPOT){
+				map[position->tower_x[currentI]][position->tower_y[currentI]] = SPOT;
 			}
 			else{
-				if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == SELECTEDTOWER){
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = TOWER;
+				if(map[position->tower_x[currentI]][position->tower_y[currentI]] == SELECTEDTOWER){
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = TOWER;
 				}
 				else{
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = TOWER2;
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = TOWER2;
 				}
 			}
 
-			mapChanges[rowTowerFields[currentI]][columnTowerFields[currentI]] = true;
+			mapChanges[position->tower_x[currentI]][position->tower_y[currentI]] = true;
 			currentI++;
-			if (currentI == numOfTowers) {
+			if (currentI == position->numOfTowers) {
 				currentI = 0;
 			}
-			if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == SPOT){
-				map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDSPOT;
+			if(map[position->tower_x[currentI]][position->tower_y[currentI]] == SPOT){
+				map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDSPOT;
 			}
 			else{
-				if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == TOWER){
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER;
+				if(map[position->tower_x[currentI]][position->tower_y[currentI]] == TOWER){
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER;
 				}
 				else{
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER2;
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER2;
 				}
 			}
-			mapChanges[rowTowerFields[currentI]][columnTowerFields[currentI]] = true;
+			mapChanges[position->tower_x[currentI]][position->tower_y[currentI]] = true;
 			break;
 
 		case 'l':
 
-			if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] != TOWER &&
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] != SELECTEDTOWER &&
-				map[rowTowerFields[currentI]][columnTowerFields[currentI]] != TOWER2 &&
-									map[rowTowerFields[currentI]][columnTowerFields[currentI]] != SELECTEDTOWER2){
-				map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SPOT;
+			if(map[position->tower_x[currentI]][position->tower_y[currentI]] != TOWER &&
+				map[position->tower_x[currentI]][position->tower_y[currentI]] != SELECTEDTOWER &&
+				map[position->tower_x[currentI]][position->tower_y[currentI]] != TOWER2 &&
+				map[position->tower_x[currentI]][position->tower_y[currentI]] != SELECTEDTOWER2){
+				map[position->tower_x[currentI]][position->tower_y[currentI]] = SPOT;
 			}
 			else{
-				if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == SELECTEDTOWER){
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = TOWER;
+				if(map[position->tower_x[currentI]][position->tower_y[currentI]] == SELECTEDTOWER){
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = TOWER;
 				}
 				else{
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = TOWER2;
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = TOWER2;
 				}
 			}
-			mapChanges[rowTowerFields[currentI]][columnTowerFields[currentI]] = true;
+			mapChanges[position->tower_x[currentI]][position->tower_y[currentI]] = true;
 
 			currentI--;
 			if (currentI < 0) {
-				currentI = numOfTowers-1;
+				currentI = position->numOfTowers-1;
 			}
 
-			if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] != TOWER &&
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] != TOWER2){
-				map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDSPOT;
+			if(map[position->tower_x[currentI]][position->tower_y[currentI]] != TOWER &&
+					map[position->tower_x[currentI]][position->tower_y[currentI]] != TOWER2){
+				map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDSPOT;
 			}
 			else{
-				if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == TOWER){
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER;
+				if(map[position->tower_x[currentI]][position->tower_y[currentI]] == TOWER){
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER;
 				}
 				else{
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER2;
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER2;
 				}
 			}
-			mapChanges[rowTowerFields[currentI]][columnTowerFields[currentI]] = true;
+			mapChanges[position->tower_x[currentI]][position->tower_y[currentI]] = true;
 			break;
 
 		case 'u':
@@ -549,30 +529,30 @@ void placeTower(){
 
 		case 'R':
 
-			if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == SELECTEDSPOT){
+			if(map[position->tower_x[currentI]][position->tower_y[currentI]] == SELECTEDSPOT){
 				if(btnCnt==0){
-					if(coins >= 5){
-						map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER;
-						coins -= 5;
-						printCoins();
+					if(state->coins >= 5){
+						map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER;
+						state->coins -= 5;
+						printNumber(state->coins, 0, 0);
 					}
 				}
 				else{
-					if(coins >= 7){
-						map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER2;
-						coins -= 7;
-						printCoins();
+					if(state->coins >= 7){
+						map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER2;
+						state->coins -= 7;
+						printNumber(state->coins, 0, 0);
 					}
 				}
 			}
-			else if(map[rowTowerFields[currentI]][columnTowerFields[currentI]] == SELECTEDTOWER){
-				if(coins >= 2){
-					map[rowTowerFields[currentI]][columnTowerFields[currentI]] = SELECTEDTOWER2;
-					coins -= 2;
-					printCoins();
+			else if(map[position->tower_x[currentI]][position->tower_y[currentI]] == SELECTEDTOWER){
+				if(state->coins >= 2){
+					map[position->tower_x[currentI]][position->tower_y[currentI]] = SELECTEDTOWER2;
+					state->coins -= 2;
+					printNumber(state->coins, 0, 0);
 				}
 			}
-			mapChanges[rowTowerFields[currentI]][columnTowerFields[currentI]] = true;
+			mapChanges[position->tower_x[currentI]][position->tower_y[currentI]] = true;
 			break;
 
 
@@ -582,14 +562,10 @@ void placeTower(){
 
 }
 
-void insertCreep(){
-	//////////////////////////////////////////////////////////////////////////////////////
-	//static int DONTTOUCH = 0; /// NEMOJ DIRATI OVO NIKADA NI SLUCAJNO
-	//DONTTOUCH++;			  /// A NI OVO!!!!!!!!!!!!!!!!!! NIKADA :) OZBILJNO TO MISLIM.... KENJICU NE SERI!
-	//////////////////////////////////////////////////////////////////////////////////////
-
-	map[rowDirtFields[0]][columnDirtFields[0]] = CREEP;
-	mapChanges[rowDirtFields[0]][columnDirtFields[0]] = true;
+void insertCreep(struct CreepRoute *route)
+{
+	map[route->creep_x[0]][route->creep_y[0]] = CREEP;
+	mapChanges[route->creep_x[0]][route->creep_y[0]] = true;
 	drawMap();
 	creepsSpawned++;
 }
@@ -708,103 +684,142 @@ void drawEndGame(){
 	}
 }
 
-
-int main() {
-
-	cleanup_platform();
-
-	init_platform();
-	init();
-
-	while(1)
+bool play_level(struct Level *level, struct GameState *game_state, struct CreepRoute *route, struct TowerPosition *position)
+{
+    int row, column;
+    for (row = 0; row < SIZEROW; row++)
 	{
-		int row,column;
-		for (row = 0; row < SIZEROW; row++) {
-			for (column = 0; column < SIZECOLUMN; column++) {
-				map[row][column] = map1Origin[row][column];
-				mapChanges[row][column] = true;
+        for (column = 0; column < SIZECOLUMN; column++)
+		{
+            map[row][column] = level->initial_map[row][column];
+            mapChanges[row][column] = true;
+        }
+    }
+
+    int currentHP = 3;
+    int numOfCreep = 20;
+    int creepSpeed = 0;
+    int creepTime = 0;
+    int turrentOneFire=0, turrentTwoFire=0;
+    int creepsRem = MAXCREEPS;
+
+    unsigned int placeTowerSpeed = 0;
+
+    drawMap();
+
+    printNumber(game_state->coins, 0, 0);
+    printNumber(numOfCreep, 8, 0);
+    drawSprite(8, 64, 16, 0, 8, 8);
+    drawSprite(8, 72, 16, 8, 8, 8);
+
+    fillRoute(route, level->start_row, level->start_column);
+
+    getTowerPos(route, position);
+    bool passed;
+	while(1){
+
+			if(endGame)
+			{
+				passed = false;
+				break;
 			}
-		}
+			if (creepsRem == 0)
+			{
+				passed = true;
+				break;
+			}
+			if (placeTowerSpeed == 10000)
+			{
+				placeTower(game_state, position);
+				placeTowerSpeed = 0;
+			}
 
-		int turrentOneFire=0, turrentTwoFire=0;
-		unsigned int placeTowerSpeed=0;
-		unsigned int creepSpeed = 0;
-		int creepTime = 0;
+			if (creepSpeed == 1000000)
+			{
+				moveCreep(route, game_state, &currentHP, &creepsRem);
+				printNumber(numOfCreep,0, 8);
 
-		int creepsSpawned = 0;
-		int creepsRem = MAXCREEPS;
-		int currentI = 0;
-		int btnCnt = 0;
-		int currentHP = 3;
-		int coins = 20;
-		// reset global variables
-
-		endGame = false;
-		creepsRem = MAXCREEPS;
-		dirtLen=0;
-		numOfTowers = 0;
-		bool passed = false;
-
-		drawMap(); // init map
-
-		printCoins();
-		printCreepNumb();
-		drawSprite(8,64,16,0,8,8);
-		drawSprite(8,72,16,8,8,8);
-		getDirtFilds();
-		getTowerPos();
-
-		while(1){
-
-					if(endGame){
-						passed = false;
-						break;
+				if(creepTime == 5)
+				{
+					if(creepsSpawned < MAXCREEPS)
+					{
+						insertCreep(route);
 					}
-
-					if (creepsRem == 0){
-						passed = true;
-						break;
-					}
-					if (placeTowerSpeed == 10000){
-						placeTower();
-						placeTowerSpeed = 0;
-					}
-
-					if (creepSpeed == 1000000){
-						if(creepTime == 5){
-							if(creepsSpawned < MAXCREEPS){
-								insertCreep();
-							}
-
-							creepTime = 0;
-
-						}
-
-						moveCreep();
-						printCreepNumb();
-
-						if(turrentOneFire == 6 ){
-							turretOneFire();
-							turrentOneFire = 0;
-						}
-
-						if(turrentTwoFire == 4 ){
-							turretTwoFire();
-							turrentTwoFire = 0;
-						}
-
-						turrentOneFire++;
-						turrentTwoFire++;
-						creepTime++;
-						creepSpeed=0;
-					}
-
-					creepSpeed++;
-					placeTowerSpeed++;
-
+				creepTime = 0;
 				}
-			return passed;
-	}
 
-	return 0;
+				if(turrentOneFire == 6 )
+				{
+					turretOneFire();
+					turrentOneFire = 0;
+				}
+
+				if(turrentTwoFire == 4 )
+				{
+					turretTwoFire();
+					turrentTwoFire = 0;
+				}
+				turrentOneFire++;
+				turrentTwoFire++;
+				creepTime++;
+				creepSpeed=0;
+			}
+			creepSpeed++;
+			placeTowerSpeed++;
+		}
+    return passed;
 }
+
+int main()
+{
+
+    cleanup_platform();
+
+    init_platform();
+    init();
+
+    struct GameState state;
+    struct CreepRoute route;
+    struct Level levels[2] = {level1, level2};
+    struct TowerPosition position;
+    state.coins = 20;
+    state.current_level = 0;
+    int lastLevel = 2;
+
+    while (1)
+	{
+        bool won = true;
+
+        /* opcija 1
+        switch (state.current_level)
+		{
+        case 0: won = play_level(level1, );
+        case 1: won = play_level(level2, ...); ...
+        }*/
+
+        // opcija 2
+        won = play_level(&levels[state.current_level], &state, &route, &position);
+
+        if (won) {
+            if (state.current_level < lastLevel) {
+                state.current_level++;
+                drawWinLvl();
+            }
+            else {
+                drawEndGame();
+                state.coins = 20;
+				state.current_level = 0;
+            }
+        }
+        else {
+            drawEndGame();
+            state.coins = 20;
+			state.current_level = 0;
+        }
+    }
+
+    return 0;
+}
+
+
+
