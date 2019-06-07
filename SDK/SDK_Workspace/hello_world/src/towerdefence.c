@@ -74,7 +74,7 @@
 #define SELECTEDTOWER 'O'
 #define SELECTEDTOWER2 'o'
 
-#define MAXCREEPS 1
+#define MAXCREEPS 10
 #define MAX_ROUTE_LENGTH 100
 
 #define MAP_HEIGHT 15
@@ -704,6 +704,12 @@ bool play_level(struct Level *level, struct GameState *game_state, struct CreepR
     int turrentOneFire=0, turrentTwoFire=0;
     int creepsRem = MAXCREEPS;
     int creepsSpawned = 0;
+    position->numOfTowers = 0;
+    game_state->coins = 20;
+    endGame = false;
+    lastKey = 'n';
+    currentI = 0;
+    btnCnt = 0;
 
     unsigned int placeTowerSpeed = 0;
 
@@ -785,8 +791,7 @@ int main()
     struct CreepRoute route;
     struct Level levels[] = {level1, level2};
     struct TowerPosition position;
-    position.numOfTowers = 0;
-    state.coins = 30;
+    state.coins = 20;
     state.current_level = 0;
     int lastLevel = sizeof(levels)/sizeof(struct Level);
 
@@ -798,20 +803,21 @@ int main()
 
 
         if (won) {
-            if (state.current_level < lastLevel) {
+            if (state.current_level + 1 < lastLevel) {
                 state.current_level++;
                 drawWinLvl();
             }
             else {
                 drawEndGame();
-                state.coins = 20;
 				state.current_level = 0;
+				state.coins = 20;
             }
         }
         else {
             drawEndGame();
-            state.coins = 20;
 			state.current_level = 0;
+			state.coins = 20;
+
         }
     }
 
