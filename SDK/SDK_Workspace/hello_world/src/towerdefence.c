@@ -74,9 +74,7 @@
 #define SELECTEDTOWER 'O'
 #define SELECTEDTOWER2 'o'
 
-#define SELECTEDTOWER 'O'
-#define SELECTEDTOWER2 'o'
-#define MAXCREEPS 20
+#define MAXCREEPS 1
 #define MAX_ROUTE_LENGTH 100
 
 #define MAP_HEIGHT 15
@@ -95,7 +93,6 @@
 #define CENTER 0b00010000
 #define SW0 0b00000001
 #define SW1 0b00000010
-#define MAXCREEPS 20
 
 bool endGame = false;
 
@@ -123,7 +120,6 @@ struct TowerPosition {
 };
 
 int btnCnt = 0;
-int creepsSpawned = 0;
 
 
 void init(){
@@ -208,7 +204,7 @@ int getSpriteIndex(int tile_type)
 void drawMap()
 {
     const int sprite_x[] = {16, 0, 0, 32, 0, 16, 32, 0, 16, 32, 48, 48, 48, 48, 48, 112, 112, 112, 112, 64, 64, 64, 80, 64, 80};
-    const int sprite_y[] = {0, 0, 0, 0, 16, 16, 16, 32, 32, 32, 0, 48, 0, 16, 32, 0, 64, 0, 16, 0, 16, 48, 48, 64, 80};
+    const int sprite_y[] = {0, 0, 0, 0, 16, 16, 16, 32, 32, 32, 0, 16, 32, 48, 64, 0, 16, 32, 48, 0, 16, 32, 32, 48, 48};
 
     int row, column;
     for (row = 0; row < SIZEROW; row++)
@@ -228,8 +224,9 @@ void drawMap()
 
 void printDigit(int digit, int x, int y)
 {
-    static const int sprite_y[10] = {48, 48, 48, 48, 56, 56, 56, 56, 64, 64};
-    static const int sprite_x[10] = {16, 24, 32, 48, 16, 24, 32, 48, 16, 24};
+
+	static const int sprite_x[10] = {16, 24, 32, 40, 16, 24, 32, 40, 16, 24};
+	static const int sprite_y[10] = {48, 48, 48, 48, 56, 56, 56, 56, 64, 64};
 
     drawSprite(sprite_x[digit], sprite_y[digit], y, x, 8, 8);
 }
@@ -287,9 +284,14 @@ void fillRoute(struct CreepRoute *route, int start_row, int start_column) {
     route->length = 0;
 
     int prethodni_smer = NISTA;
-    while (column != MAP_WIDTH - 1) {
+    bool finished = false;
+    while (!finished) {
         route->creep_x[i] = row;
         route->creep_y[i] = column;
+
+        if (column == MAP_WIDTH - 1) {
+                    finished = true;
+                }
 
         if (column < (MAP_WIDTH - 1) && map[row][column + 1] == DIRT) { // DESNO
             if (i == 0 || prethodni_smer != LEVO) {
@@ -331,57 +333,57 @@ void fillRoute(struct CreepRoute *route, int start_row, int start_column) {
 
 //moving creep forward
 void moveCreep(struct CreepRoute *route, struct GameState *state, int *currentHP, int *creepsRem){
-	int r = 42; /// r=110 a route->length = 42
-	if(map[route->creep_x[r]][route->creep_y[r]] != DIRT){
-		if(map[route->creep_x[r]][route->creep_y[r]]==CREEP4){
+	int last = route->length - 1; /// r=110 a route->length = 42
+	if(map[route->creep_x[last]][route->creep_y[last]] != DIRT){
+		if(map[route->creep_x[last]][route->creep_y[last]]==CREEP4){
 			(*creepsRem)--;
-			map[route->creep_x[r]][route->creep_y[r]] = DIRT;
-			mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
+			map[route->creep_x[last]][route->creep_y[last]] = DIRT;
+			mapChanges[route->creep_x[last]][route->creep_y[last]] = true;
 		}
 		else{
 			(*currentHP)--;
 			(*creepsRem)--;
 
 			if((*currentHP) == 2){
-				map[route->creep_x[route->length]-1][route->creep_y[route->length]] = HP2;
-				map[route->creep_x[route->length]+1][route->creep_y[route->length]] = HP2;
-				mapChanges[route->creep_x[route->length]-1][route->creep_y[route->length]] = true;
-				mapChanges[route->creep_x[route->length]+1][route->creep_y[route->length]] = true;
+				map[route->creep_x[last]-1][route->creep_y[last]] = HP2;
+				map[route->creep_x[last]+1][route->creep_y[route->length]] = HP2;
+				mapChanges[route->creep_x[last]-1][route->creep_y[last]] = true;
+				mapChanges[route->creep_x[last]+1][route->creep_y[last]] = true;
 			}
 			else if((*currentHP) == 1){
-				map[route->creep_x[route->length]-1][route->creep_y[route->length]] = HP3;
-				map[route->creep_x[route->length]+1][route->creep_y[route->length]] = HP3;
-				mapChanges[route->creep_x[route->length]-1][route->creep_y[route->length]] = true;
-				mapChanges[route->creep_x[route->length]+1][route->creep_y[route->length]] = true;
+				map[route->creep_x[last]-1][route->creep_y[last]] = HP3;
+				map[route->creep_x[last]+1][route->creep_y[last]] = HP3;
+				mapChanges[route->creep_x[last]-1][route->creep_y[last]] = true;
+				mapChanges[route->creep_x[last]+1][route->creep_y[last]] = true;
 			}
 			else if((*currentHP) == 0){
-				map[route->creep_x[route->length]-1][route->creep_y[route->length]] = HP4;
-				map[route->creep_x[route->length]+1][route->creep_y[route->length]] = HP4;
-				mapChanges[route->creep_x[route->length]-1][route->creep_y[route->length]] = true;
-				mapChanges[route->creep_x[route->length]+1][route->creep_y[route->length]] = true;
+				map[route->creep_x[last]-1][route->creep_y[last]] = HP4;
+				map[route->creep_x[route->length]+1][route->creep_y[last]] = HP4;
+				mapChanges[route->creep_x[last]-1][route->creep_y[last]] = true;
+				mapChanges[route->creep_x[last]+1][route->creep_y[last]] = true;
 				endGame = true;
 			}
-			map[route->creep_x[r]][route->creep_y[r]] = DIRT;
-			mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
+			map[route->creep_x[last]][route->creep_y[last]] = DIRT;
+			mapChanges[route->creep_x[last]][route->creep_y[last]] = true;
 		}
 	}
-	while((r--) >= 0){
-		if(map[route->creep_x[r]][route->creep_y[r]] != DIRT){
-			if(map[route->creep_x[r]][route->creep_y[r]]==CREEP4){
+	while(--last >= 0){
+		if(map[route->creep_x[last]][route->creep_y[last]] != DIRT){
+			if(map[route->creep_x[last]][route->creep_y[last]]==CREEP4){
 				(*creepsRem)--;
 				state->coins+=3;
 				printNumber(state->coins, 0, 0);
-				map[route->creep_x[r]][route->creep_y[r]] = DIRT;
-				mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
+				printNumber((*creepsRem), 8, 0);
+				map[route->creep_x[last]][route->creep_y[last]] = DIRT;
+				mapChanges[route->creep_x[last]][route->creep_y[last]] = true;
 			}
 			else{
-				map[route->creep_x[r+1]][route->creep_y[r+1]] = map[route->creep_x[r]][route->creep_y[r]];
-				map[route->creep_x[r]][route->creep_y[r]] = DIRT;
-				mapChanges[route->creep_x[r+1]][route->creep_y[r+1]] = true;
-				mapChanges[route->creep_x[r]][route->creep_y[r]] = true;
+				map[route->creep_x[last+1]][route->creep_y[last+1]] = map[route->creep_x[last]][route->creep_y[last]];
+				map[route->creep_x[last]][route->creep_y[last]] = DIRT;
+				mapChanges[route->creep_x[last+1]][route->creep_y[last+1]] = true;
+				mapChanges[route->creep_x[last]][route->creep_y[last]] = true;
 			}
 		}
-		drawMap();
 	}
 
 	drawMap();
@@ -395,7 +397,7 @@ void getTowerPos(struct CreepRoute *route, struct TowerPosition *position ){
 			for(k=-1;k<2;k++){
 				if(map[route->creep_x[i]+j][route->creep_y[i]+k] == SPOT || map[route->creep_x[i]+j][route->creep_y[i]+k] == SELECTEDSPOT){
 					bool exists = false;
-					for(h=0;h<i;h++){
+					for(h=0;h<position->numOfTowers;h++){
 						if((position->tower_x[h] == route->creep_x[i]+j) && (position->tower_y[h] == route->creep_y[i]+k)){
 							exists = true;
 						}
@@ -557,17 +559,17 @@ void placeTower(struct GameState *state, struct TowerPosition *position){
 
 
 	}
-	//mapChanges[rowTowerFields[currentI]][columnTowerFields[currentI]] = true;
+
 	drawMap();
 
 }
 
-void insertCreep(struct CreepRoute *route)
+void insertCreep(struct CreepRoute *route, int *creepsSpawned)
 {
 	map[route->creep_x[0]][route->creep_y[0]] = CREEP;
 	mapChanges[route->creep_x[0]][route->creep_y[0]] = true;
 	drawMap();
-	creepsSpawned++;
+	(*creepsSpawned)++;
 }
 
 void turretOneFire(){
@@ -697,18 +699,18 @@ bool play_level(struct Level *level, struct GameState *game_state, struct CreepR
     }
 
     int currentHP = 3;
-    int numOfCreep = 20;
     int creepSpeed = 0;
     int creepTime = 0;
     int turrentOneFire=0, turrentTwoFire=0;
     int creepsRem = MAXCREEPS;
+    int creepsSpawned = 0;
 
     unsigned int placeTowerSpeed = 0;
 
     drawMap();
 
     printNumber(game_state->coins, 0, 0);
-    printNumber(numOfCreep, 8, 0);
+    printNumber(creepsRem, 8, 0);
     drawSprite(8, 64, 16, 0, 8, 8);
     drawSprite(8, 72, 16, 8, 8, 8);
 
@@ -737,13 +739,14 @@ bool play_level(struct Level *level, struct GameState *game_state, struct CreepR
 			if (creepSpeed == 1000000)
 			{
 				moveCreep(route, game_state, &currentHP, &creepsRem);
-				printNumber(numOfCreep,0, 8);
+				printNumber(creepsRem, 8, 0);
+				printNumber(game_state->coins, 0, 0);
 
 				if(creepTime == 5)
 				{
 					if(creepsSpawned < MAXCREEPS)
 					{
-						insertCreep(route);
+						insertCreep(route, &creepsSpawned);
 					}
 				creepTime = 0;
 				}
@@ -780,25 +783,19 @@ int main()
 
     struct GameState state;
     struct CreepRoute route;
-    struct Level levels[2] = {level1, level2};
+    struct Level levels[] = {level1, level2};
     struct TowerPosition position;
-    state.coins = 20;
+    position.numOfTowers = 0;
+    state.coins = 30;
     state.current_level = 0;
-    int lastLevel = 2;
+    int lastLevel = sizeof(levels)/sizeof(struct Level);
 
     while (1)
 	{
-        bool won = true;
 
-        /* opcija 1
-        switch (state.current_level)
-		{
-        case 0: won = play_level(level1, );
-        case 1: won = play_level(level2, ...); ...
-        }*/
 
-        // opcija 2
-        won = play_level(&levels[state.current_level], &state, &route, &position);
+        bool won = play_level(&levels[state.current_level], &state, &route, &position);
+
 
         if (won) {
             if (state.current_level < lastLevel) {

@@ -59,8 +59,8 @@ struct Level level2 = {
 	{'G','G','G','B','B','B','B','B','B','B','B','B','B','G','B','B','B','4','5','6'},
 },
 
-.start_row = 0,
-.start_column = 2};
+.start_row = 11,
+.start_column = 0};
 
 
 // game Over
