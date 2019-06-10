@@ -73,8 +73,13 @@
 #define TOWER2 't'
 #define SELECTEDTOWER 'O'
 #define SELECTEDTOWER2 'o'
+#define BRIDGE 'b'
+#define RIVER 'R'
+#define RIVER1 'r'
+#define RIVER2 'N'
 
-#define MAXCREEPS 10
+
+#define MAXCREEPS 20
 #define MAX_ROUTE_LENGTH 100
 
 #define MAP_HEIGHT 15
@@ -198,13 +203,18 @@ int getSpriteIndex(int tile_type)
 		case TOWER2: return 22;
 		case SELECTEDTOWER: return 23;
 		case SELECTEDTOWER2: return 24;
+		case BRIDGE: return 25;
+		case RIVER: return 26;
+		case RIVER1: return 27;
+		case RIVER2: return 28;
+
     }
 
 }
 void drawMap()
 {
-    const int sprite_x[] = {16, 0, 0, 32, 0, 16, 32, 0, 16, 32, 48, 48, 48, 48, 48, 112, 112, 112, 112, 64, 64, 64, 80, 64, 80};
-    const int sprite_y[] = {0, 0, 0, 0, 16, 16, 16, 32, 32, 32, 0, 16, 32, 48, 64, 0, 16, 32, 48, 0, 16, 32, 32, 48, 48};
+    const int sprite_x[] = {16, 0, 0, 32, 0, 16, 32, 0, 16, 32, 48, 48, 48, 48, 48, 112, 112, 112, 112, 64, 64, 64, 80, 64, 80, 96, 80, 80, 96};
+    const int sprite_y[] = {0, 0, 0, 0, 16, 16, 16, 32, 32, 32, 0, 16, 32, 48, 64, 0, 16, 32, 48, 0, 16, 32, 32, 48, 48, 0, 0, 16, 16};
 
     int row, column;
     for (row = 0; row < SIZEROW; row++)
@@ -245,37 +255,6 @@ void printNumber(int number, int x, int y)
     }
 }
 
-
-/*max state->coins 99, calls printNum for drawing left or right coin
-void printstate->coins(){
-	int l,r;
-	l=state->coins/10;
-	r=state->coins%10;
-	printNum(0,8,r);
-	if(l!=0){
-		printNum(0,0,l);
-	}
-	else{
-		drawSprite(16,0,0,0,8,8);
-	}
-
-
-}
-
-//printing the number of creeps left
-void printCreepNumb(){
-	int l,r;
-	l=creepsRem/10;
-	r=creepsRem%10;
-	printNum(8,8,r);
-	if(l!=0){
-		printNum(8,0,l);
-	}
-	else{
-		drawSprite(16,0,0,8,8,8);
-	}
-
-}*/
 void fillRoute(struct CreepRoute *route, int start_row, int start_column) {
     int column = start_column;
     int row = start_row;
@@ -346,7 +325,7 @@ void moveCreep(struct CreepRoute *route, struct GameState *state, int *currentHP
 
 			if((*currentHP) == 2){
 				map[route->creep_x[last]-1][route->creep_y[last]] = HP2;
-				map[route->creep_x[last]+1][route->creep_y[route->length]] = HP2;
+				map[route->creep_x[last]+1][route->creep_y[last]] = HP2;
 				mapChanges[route->creep_x[last]-1][route->creep_y[last]] = true;
 				mapChanges[route->creep_x[last]+1][route->creep_y[last]] = true;
 			}
@@ -789,7 +768,7 @@ int main()
 
     struct GameState state;
     struct CreepRoute route;
-    struct Level levels[] = {level1, level2};
+    struct Level levels[] = {level1, level2, level3};
     struct TowerPosition position;
     state.coins = 20;
     state.current_level = 0;
@@ -808,15 +787,13 @@ int main()
                 drawWinLvl();
             }
             else {
-                drawEndGame();
+                drawWon();
 				state.current_level = 0;
-				state.coins = 20;
             }
         }
         else {
             drawEndGame();
 			state.current_level = 0;
-			state.coins = 20;
 
         }
     }
